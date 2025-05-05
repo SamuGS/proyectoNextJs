@@ -1,28 +1,24 @@
 import type { NextAuthConfig } from 'next-auth';
-
+ 
 export const authConfig = {
   pages: {
     signIn: '/login',
   },
   callbacks: {
-    async authorized({ auth, request: { nextUrl } }) {
+    authorized({ auth, request }) {
       const isLoggedIn = !!auth?.user;
-      const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
-
+      const isOnDashboard = request.nextUrl.pathname.startsWith('/dashboard');
+    
       if (isOnDashboard) {
-        if (isLoggedIn) {
-          return true; // Allow access to dashboard if logged in
-        }
-        return false; // Redirect unauthenticated users to the login page
+        if (isLoggedIn) return true;
+        return false;
+      } else if (isLoggedIn) {
+        // Redirige usando URL absoluta basada en `request.url`
+        return Response.redirect(new URL('/dashboard', request.nextUrl.origin));
       }
-
-      // If already logged in and trying to access non-dashboard, redirect to dashboard
-      if (isLoggedIn) {
-        return Response.redirect(new URL('/dashboard', nextUrl));
-      }
-
-      return true; // Allow non-dashboard access for unauthenticated users
-    },
+    
+      return true;
+    }
   },
-  providers: [], // Add your providers here
+  providers: [], // Add providers with an empty array for now
 } satisfies NextAuthConfig;
